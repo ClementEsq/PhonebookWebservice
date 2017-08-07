@@ -150,7 +150,7 @@
       <Name>Phonebook.Webservice.Contracts</Name>
     </ProjectReference>
     <ProjectReference Include="..\Phonebook.Webservice.Infrastructure\Phonebook.Webservice.Infrastructure.csproj">
-      <Project>{80b00c50-f06a-4ba2-97be-799fb02ddef3}</Project>
+      <Project>{2a1ec7e1-87b2-4e26-a7f1-1cdcc7f2e4e7}</Project>
       <Name>Phonebook.Webservice.Infrastructure</Name>
     </ProjectReference>
     <ProjectReference Include="..\Phonebook.Webservice.Models\Phonebook.Webservice.Models.csproj">
