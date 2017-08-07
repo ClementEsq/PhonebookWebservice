@@ -3,8 +3,8 @@ source https://api.nuget.org/v3/index.json
 source https://www.nuget.org/api/v2
 
 nuget FAKE
-nuget Microsoft.AspNet.Identity.EntityFramework
 nuget Microsoft.AspNet.WebApi.OwinSelfHost
+nuget Microsoft.AspNet.Identity.EntityFramework
 nuget Microsoft.AspNet.Identity.Owin
 nuget Microsoft.AspNet.WebApi
 nuget Microsoft.AspNet.WebApi.Client
