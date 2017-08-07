@@ -1,7 +1,7 @@
 # Phonebook WebServices
 
 Open Command Prompt and use build.cmd to build project
-NB: Set "Phonebook.Webservice.Service" as start up project.
+<br/>NB: Set "Phonebook.Webservice.Service" as start up project.
 
 Post
 http://localhost:7000/phonebook/new
