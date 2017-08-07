@@ -1,0 +1,59 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26430.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".paket", ".paket", "{B7FE0B4A-CA4F-4257-8E25-FCCAB8F27F24}"
+	ProjectSection(SolutionItems) = preProject
+		paket.dependencies = paket.dependencies
+		paket.lock = paket.lock
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".build", ".build", "{54A9021D-846F-4C29-ACED-3010C290FDC4}"
+	ProjectSection(SolutionItems) = preProject
+		appveyor.yml = appveyor.yml
+		build.cmd = build.cmd
+		build.fsx = build.fsx
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Phonebook.Webservice", "Phonebook.Webservice\Phonebook.Webservice.csproj", "{052EBE3F-05F6-4497-A352-9FAECED9B7EE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Phonebook.Webservice.Contracts", "Phonebook.Webservice.Contracts\Phonebook.Webservice.Contracts.csproj", "{87D54BA9-5F13-4749-8E4E-2757F54637D8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Phonebook.Webservice.Infrastructure", "Phonebook.Webservice.Infrastructure\Phonebook.Webservice.Infrastructure.csproj", "{80B00C50-F06A-4BA2-97BE-799FB02DDEF3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Phonebook.Webservice.Models", "Phonebook.Webservice.Models\Phonebook.Webservice.Models.csproj", "{059B3143-B9E0-4AC1-BB72-CFBF2DFDB92D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Phonebook.Webservice.Service", "Phonebook.Webservice.Service\Phonebook.Webservice.Service.csproj", "{92FA9ED9-7902-4D79-B131-44DAE0400AEF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{052EBE3F-05F6-4497-A352-9FAECED9B7EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{052EBE3F-05F6-4497-A352-9FAECED9B7EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{052EBE3F-05F6-4497-A352-9FAECED9B7EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{052EBE3F-05F6-4497-A352-9FAECED9B7EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{87D54BA9-5F13-4749-8E4E-2757F54637D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{87D54BA9-5F13-4749-8E4E-2757F54637D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{87D54BA9-5F13-4749-8E4E-2757F54637D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87D54BA9-5F13-4749-8E4E-2757F54637D8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{80B00C50-F06A-4BA2-97BE-799FB02DDEF3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{80B00C50-F06A-4BA2-97BE-799FB02DDEF3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{80B00C50-F06A-4BA2-97BE-799FB02DDEF3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{80B00C50-F06A-4BA2-97BE-799FB02DDEF3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{059B3143-B9E0-4AC1-BB72-CFBF2DFDB92D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{059B3143-B9E0-4AC1-BB72-CFBF2DFDB92D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{059B3143-B9E0-4AC1-BB72-CFBF2DFDB92D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{059B3143-B9E0-4AC1-BB72-CFBF2DFDB92D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{92FA9ED9-7902-4D79-B131-44DAE0400AEF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{92FA9ED9-7902-4D79-B131-44DAE0400AEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{92FA9ED9-7902-4D79-B131-44DAE0400AEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{92FA9ED9-7902-4D79-B131-44DAE0400AEF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,16 @@
+Microsoft.AspNet.Identity.EntityFramework
+Microsoft.AspNet.Identity.Owin
+Microsoft.AspNet.WebApi
+Microsoft.AspNet.WebApi.Owin
+Microsoft.CodeDom.Providers.DotNetCompilerPlatform
+Microsoft.Owin.Host.SystemWeb
+Autofac.WebApi2
+Dapper
+Serilog.Sinks.RollingFileAlternate
+Autofac.Owin
+MySqlConnector
+DogStatsD-CSharp-Client
+Autofac
+Microsoft.AspNet.WebApi.Client
+Microsoft.AspNet.WebApi.Core
+Microsoft.AspNet.WebApi.WebHost

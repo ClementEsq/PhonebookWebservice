@@ -1,0 +1,6 @@
+Newtonsoft.Json
+EntityFramework
+Dapper
+Serilog
+Serilog.Sinks.RollingFileAlternate
+DogStatsD-CSharp-Client

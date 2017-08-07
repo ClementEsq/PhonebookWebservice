@@ -1,0 +1,217 @@
+﻿using Dapper;
+using Nowtel.WebServices.Models;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Text;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Nowtel.WebServices.Infrastructure.Interfaces;
+using Nowtel.WebServices.Models.Connections;
+using Nowtel.WebServices.Models.Digitalk;
+
+namespace Nowtel.WebServices.Infrastructure
+{
+    public class BundleService : IBundleService
+    {
+        private readonly IDbConnection connection;
+        private readonly IUserAccountService userAccountService;
+        private readonly HttpClient client;
+
+        public BundleService(IDigitalkAppsSettings digitalkAppsSettings, IUserAccountService userAccountService)
+        {
+            this.client = digitalkAppsSettings.Client;
+            this.connection = digitalkAppsSettings.Connection;
+            this.userAccountService = userAccountService;
+        }
+
+        public async Task<IList<Bundle>> GetAll()
+        {
+            //"SELECT * FROM calling_packages cp (nolock), compatible_bundles cb (nolock) WHERE cb.calling_package_id = cp.calling_package_id AND cb.service_id = ? ORDER BY cp.package_category, cp.branded_name"
+
+            var sqlQuery = "select calling_package_id as Id, " +
+                           "name as Name, branded_name as BrandName, " +
+                           "description as Description, package_type as PackageType, " +
+                           "package_category as PackageCategory, " +
+                           "subscription_charge as TotalCostPence, " +
+                           "charge_period_length as ChargePeriodDays, " +
+                           "allowance_period_length as BundlePeriodDays, " +
+                           "allowance_sms_messages as Texts, " +
+                           "allowance_voice_seconds as Seconds, " +
+                           "created_date as CreatedDateTime, " +
+                           "voice_rate_sheet_id as RateSheetID from dbo.calling_packages";
+
+            var result = await connection.QueryAsync<Bundle>(sqlQuery);
+            var bundles = result.ToList();
+
+            foreach (var bundle in bundles)
+            {
+                bundle.Minutes = (bundle.Seconds / 60);
+            }
+
+            return bundles;
+        }
+
+        public async Task<IList<Bundle>> GetCompatibleBundles(string msisdn)
+        {
+            var userAccount = await userAccountService.GetUserAccount(msisdn);
+
+            var result = await this.client.GetAsync($"subscribers/{userAccount.AccountID}/subscriptions/0/compatible-bundles");
+
+            if (!result.IsSuccessStatusCode) return null;
+
+            var bundles = JsonConvert.DeserializeObject<BundleAllowance[]>(await result.Content.ReadAsStringAsync());
+
+            return bundles.Select(bundle => new Bundle
+            {
+                Id = new Guid(bundle.PackageId),
+                BrandedName = bundle.BrandedName,
+                PackageType = bundle.PackageType.ToString(),
+                PackageCategory = bundle.PackageCategory.ToString(),
+                TotalCostPence = bundle.InitialCharge,
+                ChargePeriodDays = bundle.ChargePeriodLength,
+                Texts = bundle.SMSAllowance.Messages,
+                Seconds = bundle.VoiceAllowance.Seconds,
+                Minutes = bundle.VoiceAllowance.Seconds / 60
+            }).ToArray();
+        }
+
+<<<<<<< HEAD
+        public async Task<BundleDetails> Get(string id)
+=======
+        public async Task<Bundle> Get(string msisdn, string id)
+>>>>>>> 0e440575bab00aa625eb13cbe9d23c22b57b2dd5
+        {
+            var guid = new Guid(id);
+
+<<<<<<< HEAD
+            return GetBundleDetails(result.First());
+        }
+
+        private BundleDetails GetBundleDetails(Bundle bundle)
+        {
+            var bundleDetails = new BundleDetails();
+
+            bundleDetails.Id = bundle.Id.ToString();
+
+            return bundleDetails;
+=======
+            var bundles = await GetCompatibleBundles(msisdn);
+            
+            return bundles.FirstOrDefault(i => i.Id == guid);
+>>>>>>> 0e440575bab00aa625eb13cbe9d23c22b57b2dd5
+        }
+
+        public async Task<IList<Bundle>> GetAccountBundles(string msisdn)
+        {
+            var userAccount = await userAccountService.GetUserAccount(msisdn);
+
+            var result = await client.GetAsync($"subscribers/{userAccount.AccountID}/subscriptions/0/bundles");
+
+            if (!result.IsSuccessStatusCode) return null;
+
+            var bundles = JsonConvert.DeserializeObject<BundleAllowance[]>(await result.Content.ReadAsStringAsync());
+
+            return bundles.Select(bundle => new Bundle
+            {
+                Id = new Guid(bundle.PackageId),
+                BrandedName = bundle.BrandedName,
+                PackageType = bundle.PackageType.ToString(),
+                PackageCategory = bundle.PackageCategory.ToString(),
+                TotalCostPence = bundle.InitialCharge,
+                ChargePeriodDays = bundle.ChargePeriodLength,
+                Texts = bundle.SMSAllowance.Messages,
+                Seconds = bundle.VoiceAllowance.Seconds,
+                Minutes = bundle.VoiceAllowance.Seconds / 60
+            }).ToArray();
+        }
+
+        public async Task<string> PurchaseBundle(string msisdn, string bundleId)
+        {
+            var userAccount = await userAccountService.GetUserAccount(msisdn);
+
+            var result = await client.PostAsync($"subscribers/{userAccount.AccountID}/subscriptions/{bundleId}/bundles", new StringContent(null));
+
+            if (!result.IsSuccessStatusCode) return null;
+
+            return "";
+
+            //createPurchase
+
+            //       "INSERT INTO now_bpdetails (account, amount, purchasedate, title, fname, lname, address1, address2, city, state, " +
+            //               "post_code, email, country, auth_status, msisdn, registered, bundlename) " +
+            //               "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            //);
+
+            //Calendar nowTime = Calendar.getInstance();
+
+            //System.out.println("account.getAccountID() = " + account.getAccountID());
+            //pstmt.setString(1, account.getAccountID());
+
+            //System.out.println("creditCardBean.getAmount() = " + creditCardBean.getAmount());
+            //pstmt.setBigDecimal(2, creditCardBean.getAmount());
+
+            ////System.out.println("creditCardBean.getAmount() = " + creditCardBean.getAmount() );
+            //pstmt.setTimestamp(3, new Timestamp(nowTime.getTimeInMillis()));
+
+            //System.out.println("account.getTitle() = " + account.getTitle());
+            //pstmt.setString(4, account.getTitle());
+
+            //System.out.println("account.getForename() = " + account.getForename());
+            //pstmt.setString(5, account.getForename());
+
+            //System.out.println("account.getSurname() = " + account.getSurname());
+            //pstmt.setString(6, account.getSurname());
+
+            //System.out.println("creditCardBean.getAddress1() = " + creditCardBean.getAddress1());
+            //pstmt.setString(7, creditCardBean.getAddress1());
+
+            //System.out.println("creditCardBean.getAddress2() = " + creditCardBean.getAddress2());
+            //pstmt.setString(8, creditCardBean.getAddress2());
+
+            //System.out.println("creditCardBean.getCity() = " + creditCardBean.getCity());
+            //pstmt.setString(9, creditCardBean.getCity());
+
+            //System.out.println("creditCardBean.getState() = " + creditCardBean.getState());
+            //pstmt.setString(10, creditCardBean.getState());
+
+            //System.out.println("creditCardBean.getPostCode() = " + creditCardBean.getPostCode());
+            //pstmt.setString(11, creditCardBean.getPostCode());
+
+            //System.out.println("creditCardBean.getEmail() = " + creditCardBean.getEmail());
+            //pstmt.setString(12, creditCardBean.getEmail());
+
+            //System.out.println("creditCardBean.getCountry() = " + creditCardBean.getCountry());
+            //pstmt.setString(13, creditCardBean.getCountry());
+
+            //pstmt.setString(14, "PENDING");
+            //System.out.println("account.getCLI() = " + account.getCLI());
+            //pstmt.setString(15, account.getCLI());
+
+
+            //"SELECT bp_id FROM now_bpdetails WHERE account = ? AND purchasedate = ?"
+
+
+
+            //addBundle
+            //CallableStatement cs = con.prepareCall("{call now_AccountsAddBundle(?, ?, ?, ?)}");	
+
+
+
+            //updatePurchase
+            var mipayToken = string.Empty;
+            var authStatus = true;
+            var status = true;
+            var errorCode = string.Empty;
+            var bundlePurchaseID = string.Empty;
+
+            var updateStatement = "UPDATE now_bpdetails SET token = ?, auth_status = ?, status = ?, errorcode = ? WHERE BP_ID = ?";
+
+
+            throw new NotImplementedException();
+        }
+    }
+}

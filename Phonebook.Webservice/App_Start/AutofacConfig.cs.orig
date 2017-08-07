@@ -1,0 +1,278 @@
+﻿using System;
+using System.Configuration;
+using System.Data;
+using System.Data.SqlClient;
+using System.IO;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Reflection;
+using System.Text;
+using System.Web.Http;
+using Autofac;
+using Autofac.Core;
+using Autofac.Integration.WebApi;
+using FluentCache.Simple;
+using Newtonsoft.Json;
+using Nowtel.Sms.Domain;
+using Nowtel.Sms.Domain.Clx;
+using Nowtel.Sms.Domain.Data;
+using Nowtel.Sms.Domain.FortyTwo;
+using Nowtel.Sms.Domain.Twilio;
+using Nowtel.WebServices.Controllers;
+using Nowtel.WebServices.Filters;
+using PhoneNumbers;
+using Nowtel.WebServices.Infrastructure;
+using Nowtel.WebServices.Infrastructure.Interfaces;
+using Nowtel.WebServices.Infrastructure.Languages;
+using Nowtel.WebServices.Models;
+using Nowtel.WebServices.Models.Connections;
+using Serilog;
+using Serilog.Events;
+using Serilog.Sinks.RollingFileAlternate;
+using TalkHomeMobile.Models.Connections;
+using TalkHomeMobile.Infrastructure;
+
+namespace Nowtel.WebServices
+{
+    public class AutofacConfig
+    {
+        public static IContainer Configuration(HttpConfiguration config)
+        {
+            var builder = new ContainerBuilder();
+            ConfigureSerilog(builder);
+            ConfigureWebApi(builder, config);
+            ConfigureSms(builder);
+            ConfigureLegacyTalkHomeAppDatabases(builder);
+            ConfigureLegacyTalkHomeMobileDatabases(builder);
+            ConfigureTalkHomeAppServices(builder);
+            ConfigureTalkHomeMobileServices(builder);
+
+            builder.RegisterType<PhoneNumberService>().AsImplementedInterfaces();
+            builder.RegisterType<UserAccountService>().AsImplementedInterfaces();
+            builder.Register(ctx => PhoneNumberUtil.GetInstance()).SingleInstance();
+
+            var container = builder.Build();
+
+            config.DependencyResolver = new AutofacWebApiDependencyResolver(container);
+
+            return container;
+        }
+
+        public static void ConfigureLegacyTalkHomeAppDatabases(ContainerBuilder builder)
+        {
+            builder.Register(i => new SqlConnection(ConfigurationManager.ConnectionStrings["DigitalkAppsDb"].ConnectionString))
+                   .Named<IDbConnection>("DigitalkAppsDb")
+                   .InstancePerRequest();
+            builder.Register(i => new SqlConnection(ConfigurationManager.ConnectionStrings["TalkHomeAppsDb"].ConnectionString))
+                   .Named<IDbConnection>("TalkHomeAppsDb")
+                   .InstancePerRequest();
+            builder.Register(i => new SqlConnection(ConfigurationManager.ConnectionStrings["TalkHomeAppsAccountsDb"].ConnectionString))
+                   .Named<IDbConnection>("TalkHomeAppsAccountsDb")
+                   .InstancePerRequest();
+
+            builder.Register(ctx =>
+            {
+                var client = new HttpClient
+                {
+                    BaseAddress = new Uri("http://172.20.120.134/")
+                };
+                client.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");
+                client.DefaultRequestHeaders.TryAddWithoutValidation("content-type", "application/json");
+                client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue(
+                        "Basic",
+                        Convert.ToBase64String(Encoding.ASCII.GetBytes("NowtelAPIUser:trR_911@54FD")));
+                return client;
+            }).Named<HttpClient>("DigitalkAppsApi")
+              .SingleInstance();
+
+            builder.Register(ctx =>
+                new DigitalkAppsSettings(
+                    ctx.ResolveNamed<IDbConnection>("DigitalkAppsDb"),
+                    ctx.ResolveNamed<HttpClient>("DigitalkAppsApi")))
+                .AsImplementedInterfaces()
+                .InstancePerRequest();
+
+            builder.Register(ctx => new TalkHomeAppsConnection(ctx.ResolveNamed<IDbConnection>("TalkHomeAppsDb")))
+                   .AsImplementedInterfaces()
+                   .InstancePerRequest();
+
+            builder.Register(ctx => new TalkHomeAppsAccountsConnection(ctx.ResolveNamed<IDbConnection>("TalkHomeAppsAccountsDb")))
+                   .AsImplementedInterfaces()
+                   .InstancePerRequest();
+        }
+
+        public static void ConfigureLegacyTalkHomeMobileDatabases(ContainerBuilder builder)
+        {
+            builder.Register(i => new SqlConnection(ConfigurationManager.ConnectionStrings["TalkHomeMobileDb"].ConnectionString))
+                   .Named<IDbConnection>("TalkHomeMobileDb")
+                   .InstancePerRequest();
+
+            builder.Register(ctx => new TalkHomeMobileConnection(ctx.ResolveNamed<IDbConnection>("TalkHomeMobileDb")))
+                   .AsImplementedInterfaces()
+                   .InstancePerRequest();
+        }
+
+        public static void ConfigureTalkHomeAppServices(ContainerBuilder builder)
+        {
+            builder.RegisterType<ClientConfigService>().AsImplementedInterfaces();
+            builder.RegisterType<MiPayService>().AsImplementedInterfaces();
+            builder.RegisterType<SoapService>().AsImplementedInterfaces();
+            builder.RegisterType<WebsiteService>().AsImplementedInterfaces();
+            builder.Register(i => new FluentDictionaryCache()).AsImplementedInterfaces().SingleInstance();
+            builder.RegisterType<HelperService>().AsImplementedInterfaces();
+            builder.RegisterType<UserAccountService>().AsImplementedInterfaces();
+            builder.RegisterType<BundleService>().AsImplementedInterfaces();
+            builder.RegisterType<LocalAccessNumberService>().AsImplementedInterfaces();
+            builder.RegisterType<OffersService>().AsImplementedInterfaces();
+            builder.RegisterType<RateService>().AsImplementedInterfaces();
+            builder.RegisterType<TopupService>().AsImplementedInterfaces();
+            builder.RegisterType<HistoryService>().AsImplementedInterfaces();
+            builder.RegisterType<AdminService>().AsImplementedInterfaces();
+            builder.RegisterType<PaypalPaymentService>().AsImplementedInterfaces();
+            builder.RegisterType<BalanceService>().AsImplementedInterfaces();
+            builder.RegisterType<InviteService>().AsImplementedInterfaces();
+            builder.RegisterType<HttpService>().AsImplementedInterfaces();
+            builder.RegisterType<FraudService>().AsImplementedInterfaces();
+            builder.RegisterType<DestinationService>().AsImplementedInterfaces();
+            builder.RegisterType<TransferService>().AsImplementedInterfaces();
+            builder.RegisterType<PlatformTesterService>().AsImplementedInterfaces();
+            builder.RegisterType<ExchangeRateService>().AsImplementedInterfaces();
+            builder.Register(i =>
+            {
+                var client = new HttpClient
+                {
+                    BaseAddress = new Uri("https://api-3t.sandbox.paypal.com/nvp")
+                };
+                client.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");
+                client.DefaultRequestHeaders.TryAddWithoutValidation("content-type", "application/json");
+                client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue(
+                        "Basic",
+                        Convert.ToBase64String(Encoding.ASCII.GetBytes("")));
+
+                return new PaypalSettings
+                {
+                    Host = "",
+                    ReturnUrl = "topup/paypal/return",
+                    CancelUrl = "topup/paypal/cancel",
+                    Endpoint = client
+                };
+            }).AsImplementedInterfaces();
+            builder.Register(ctx =>
+                        new CultureService(
+                            JsonConvert.DeserializeObject<Culture[]>(File.ReadAllText("region.json")),
+                            ctx.Resolve<ILogger>()))
+                   .AsImplementedInterfaces()
+                   .SingleInstance();
+            builder.RegisterType<DutchMessageService>().AsImplementedInterfaces();
+            builder.RegisterType<NorwegianMessageService>().AsImplementedInterfaces();
+            builder.RegisterType<GermanMessageService>().AsImplementedInterfaces();
+            builder.RegisterType<GreekMessageService>().AsImplementedInterfaces();
+<<<<<<< HEAD
+            builder.RegisterType<SpanishMessageService>().AsImplementedInterfaces();
+            builder.RegisterType<FrenchMessageService>().AsImplementedInterfaces();
+            builder.RegisterType<ItalianMessageService>().AsImplementedInterfaces();
+=======
+            builder.RegisterType<EnglishMessageService>().AsImplementedInterfaces();
+>>>>>>> 458199ca2743e90427bf72eb40b38d79ecb212c6
+            builder.RegisterType<LanguageProvider>().AsImplementedInterfaces().InstancePerRequest();
+        }
+
+        public static void ConfigureTalkHomeMobileServices(ContainerBuilder builder)
+        {
+            builder.RegisterType<DatabaseService>().AsImplementedInterfaces();
+        }
+
+        public static void ConfigureWebApi(ContainerBuilder builder, HttpConfiguration config)
+        {
+            builder.RegisterApiControllers(Assembly.GetExecutingAssembly());
+            builder.RegisterWebApiFilterProvider(config);
+            builder.RegisterType<BasicPinAuthenticationFilter>()
+                   .AsWebApiActionFilterFor<ApiController>()
+                   .InstancePerRequest();
+            builder.RegisterType<LanguageFilter>()
+                   .AsWebApiActionFilterFor<ApiController>()
+                   .InstancePerRequest();
+            builder.RegisterType<ExceptionFilter>()
+                   .AsWebApiActionFilterFor<ApiController>()
+                   .InstancePerRequest();
+        }
+
+        public static void ConfigureSms(ContainerBuilder builder)
+        {
+            builder.RegisterType<SmsDbInitializer>().AsSelf().InstancePerLifetimeScope();
+            builder.RegisterType<SmsContext>().AsSelf().InstancePerLifetimeScope();
+            builder.RegisterType<ClxService>().AsImplementedInterfaces().InstancePerLifetimeScope();
+            //builder.RegisterType<ClxService>().Named<ISmsService>("UserSmsService").InstancePerLifetimeScope();
+            //builder.RegisterType<ClxService>().Named<ISmsService>("SystemSmsService").InstancePerLifetimeScope();
+
+            builder.Register(ctx => new FortyTwoSettings
+            {
+                HttpClient = new HttpClient
+                {
+                    BaseAddress = new Uri("https://rest.fortytwo.com/"),
+                    DefaultRequestHeaders =
+                    {
+                        Authorization =
+                            new AuthenticationHeaderValue("Token", ConfigurationManager.AppSettings["FortyTwoToken"])
+                    }
+                },
+                CallbackUrl = "https://api.talkhomeapp.com/FortyTwoReport/"
+            }).AsImplementedInterfaces().InstancePerLifetimeScope();
+
+            builder.Register(ctx => new ClxSettings
+            {
+                HttpClient = new HttpClient
+                {
+                    BaseAddress = new Uri("http://sms1.clxnetworks.net:3800")
+                },
+                CallbackUrl = "https://api.talkhomeapp.com/ClxReport",
+                Username = ConfigurationManager.AppSettings["ClxUser"],
+                Password = ConfigurationManager.AppSettings["ClxPassword"]
+            }).AsImplementedInterfaces().InstancePerLifetimeScope();
+
+            builder.Register(ctx =>
+            {
+                var client = new HttpClient
+                {
+                    BaseAddress = new Uri("http://sms1.clxnetworks.net:3800"),
+                    DefaultRequestHeaders =
+                    {
+                        Authorization =
+                            new AuthenticationHeaderValue(
+                                "Basic",
+                                Convert.ToBase64String(Encoding.ASCII.GetBytes(
+                                    "ACa9ad69b848cc6fbe0a5104b407c47ed5:5c838ee57952666a944d47c331690e4c")))
+                    }
+                };
+                
+                client.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");
+
+                return new TwilioSettings
+                {
+                    HttpClient = client
+                };
+            }).AsImplementedInterfaces().InstancePerLifetimeScope();
+
+            builder.Register(context => new ThrWebServices
+            {
+                Client = new HttpClient
+                {
+                    BaseAddress = new Uri("https://www.talkhomeapp.com/THRWebServices/"),
+                }
+            }).AsImplementedInterfaces().InstancePerLifetimeScope();
+
+        }
+
+        public static void ConfigureSerilog(ContainerBuilder builder)
+        {
+            builder.Register(i => new LoggerConfiguration()
+                    .MinimumLevel.Debug()
+                    .WriteTo.RollingFileAlternate("..\\logs", LogEventLevel.Warning)
+                    .CreateLogger())
+                    .As<ILogger>()
+                   .SingleInstance();
+        }
+    }
+}

@@ -1,0 +1,7 @@
+Autofac
+Topshelf
+Microsoft.AspNet.WebApi
+Microsoft.AspNet.WebApi.Owin
+Microsoft.AspNet.WebApi.OwinSelfHost
+EntityFramework
+Serilog

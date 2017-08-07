@@ -1,0 +1,23 @@
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Nowtel.WebServices.Models;
+
+namespace Nowtel.WebServices.Infrastructure.Interfaces
+{
+    public interface IBundleService
+    {
+<<<<<<< HEAD
+        Task<BundleDetails> Get(string id);
+=======
+        Task<Bundle> Get(string msisdn, string id);
+>>>>>>> 0e440575bab00aa625eb13cbe9d23c22b57b2dd5
+
+        Task<IList<Bundle>> GetAll();
+
+        Task<IList<Bundle>> GetCompatibleBundles(string msisdn);
+
+        Task<IList<Bundle>> GetAccountBundles(string msisdn);
+
+        Task<string> PurchaseBundle(string msisdn, string bundleId);
+    }
+}

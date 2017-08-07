@@ -1,0 +1,12 @@
+version: 1.0.{build}
+
+build_script:
+  - ps: .\build.cmd CreateNuGet
+
+nuget:
+  account_feed: true
+
+artifacts:
+  - path: output\*.*
+
+test: off
